@@ -1,3 +1,4 @@
+import requests
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -8,11 +9,61 @@ from langchain.vectorstores import FAISS
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
+# Use a pipeline as a high-level helper
+from transformers import ViltProcessor, ViltForQuestionAnswering
+import requests
+from PIL import Image
+from diffusers import StableDiffusionPipeline
+import torch
+from diffusers import StableDiffusionInpaintPipeline
+
 from dotenv import load_dotenv
 
 load_dotenv()
 # os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+def text_imag():
+    
+
+    model_id = "runwayml/stable-diffusion-v1-5"
+    pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16,revision="fp16")
+    pipe = pipe.to("cuda")
+
+    prompt = "iron vs superman"
+    image = pipe(prompt).images[0]  
+        
+    image.save("astronut coding.png")
+def pre():
+    pipe = StableDiffusionInpaintPipeline.from_pretrained(
+    "runwayml/stable-diffusion-inpainting",
+    revision="fp16",
+    torch_dtype=torch.float16,
+)
+    prompt = "Face of a yellow cat, high resolution, sitting on a park bench"
+#image and mask_image should be PIL images.
+#The mask structure is white for inpainting and black for keeping as is
+    image = pipe(prompt=prompt).images[0]
+    image.save("./yellow_cat_on_park_bench.png")
+def imag():
+    url = "https://images.unsplash.com/photo-1566438480900-0609be27a4be?q=80&w=1894&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    st.image(url,caption=url)
+    image = Image.open(requests.get(url, stream=True).raw)
+    text =  st.text_input("what color in this images")
+
+    processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+    model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+
+    # prepare inputs
+    encoding = processor(image, text, return_tensors="pt")
+
+    # forward pass
+    outputs = model(**encoding)
+    logits = outputs.logits
+    idx = logits.argmax(-1).item()
+    print("Predicted answer:", model.config.id2label[idx])
+    st.write(f"{model.config.id2label[idx]}")
+    
 
 def get_pdf_text(pdf_docs):
     text=""
@@ -101,7 +152,11 @@ def main():
         st.write("---")
         # st.image("img/gkj.jpg")
         st.write("AI App created by @ Jeet")  # add this line to display the image
-
+    # imag()
+    # text_imag()
+    # pre()
+    # print(torch.cuda.get_device_name(0))
+    # print(torch.cuda.memory_allocated())
 
     st.markdown(
         """
@@ -111,6 +166,6 @@ def main():
         """,
         unsafe_allow_html=True
     )
-
+    
 if __name__ == "__main__":
     main()
