@@ -11,11 +11,11 @@ from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 # Use a pipeline as a high-level helper
 from transformers import ViltProcessor, ViltForQuestionAnswering
-import requests
-from PIL import Image
-from diffusers import StableDiffusionPipeline
-import torch
-from diffusers import StableDiffusionInpaintPipeline
+# import requests
+# from PIL import Image
+# from diffusers import StableDiffusionPipeline
+# import torch
+# from diffusers import StableDiffusionInpaintPipeline
 
 from dotenv import load_dotenv
 
@@ -108,17 +108,18 @@ def get_conversational_chain():
 
 
 def user_input(user_question):
-    embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     
-    new_db = FAISS.load_local("faiss_index", embeddings)
+    # Set allow_dangerous_deserialization=True
+    new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
     docs = new_db.similarity_search(user_question)
 
     chain = get_conversational_chain()
-
     
     response = chain(
-        {"input_documents":docs, "question": user_question}
-        , return_only_outputs=True)
+        {"input_documents": docs, "question": user_question},
+        return_only_outputs=True
+    )
 
     print(response)
     st.write("Reply: ", response["output_text"])
