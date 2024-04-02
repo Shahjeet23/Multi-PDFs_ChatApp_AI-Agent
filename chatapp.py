@@ -1,4 +1,4 @@
-import requests
+# import requests
 import streamlit as st
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -10,9 +10,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 # Use a pipeline as a high-level helper
-from transformers import ViltProcessor, ViltForQuestionAnswering
-import requests
-from PIL import Image
+# from transformers import ViltProcessor, ViltForQuestionAnswering
+# import requests
+# from PIL import Image
 # from diffusers import StableDiffusionPipeline
 # import torch
 # from diffusers import StableDiffusionInpaintPipeline
