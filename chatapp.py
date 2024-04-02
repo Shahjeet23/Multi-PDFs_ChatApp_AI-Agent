@@ -13,9 +13,9 @@ from langchain.prompts import PromptTemplate
 from transformers import ViltProcessor, ViltForQuestionAnswering
 import requests
 from PIL import Image
-from diffusers import StableDiffusionPipeline
-import torch
-from diffusers import StableDiffusionInpaintPipeline
+# from diffusers import StableDiffusionPipeline
+# import torch
+# from diffusers import StableDiffusionInpaintPipeline
 
 from dotenv import load_dotenv
 
@@ -23,46 +23,46 @@ load_dotenv()
 # os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-def text_imag():
+# def text_imag():
     
 
-    model_id = "runwayml/stable-diffusion-v1-5"
-    pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16,revision="fp16")
-    pipe = pipe.to("cuda")
+#     model_id = "runwayml/stable-diffusion-v1-5"
+#     pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16,revision="fp16")
+#     pipe = pipe.to("cuda")
 
-    prompt = "iron vs superman"
-    image = pipe(prompt).images[0]  
+#     prompt = "iron vs superman"
+#     image = pipe(prompt).images[0]  
         
-    image.save("astronut coding.png")
-def pre():
-    pipe = StableDiffusionInpaintPipeline.from_pretrained(
-    "runwayml/stable-diffusion-inpainting",
-    revision="fp16",
-    torch_dtype=torch.float16,
-)
-    prompt = "Face of a yellow cat, high resolution, sitting on a park bench"
-#image and mask_image should be PIL images.
-#The mask structure is white for inpainting and black for keeping as is
-    image = pipe(prompt=prompt).images[0]
-    image.save("./yellow_cat_on_park_bench.png")
-def imag():
-    url = "https://images.unsplash.com/photo-1566438480900-0609be27a4be?q=80&w=1894&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-    st.image(url,caption=url)
-    image = Image.open(requests.get(url, stream=True).raw)
-    text =  st.text_input("what color in this images")
+#     image.save("astronut coding.png")
+# def pre():
+#     pipe = StableDiffusionInpaintPipeline.from_pretrained(
+#     "runwayml/stable-diffusion-inpainting",
+#     revision="fp16",
+#     torch_dtype=torch.float16,
+# )
+#     prompt = "Face of a yellow cat, high resolution, sitting on a park bench"
+# #image and mask_image should be PIL images.
+# #The mask structure is white for inpainting and black for keeping as is
+#     image = pipe(prompt=prompt).images[0]
+#     image.save("./yellow_cat_on_park_bench.png")
+# def imag():
+#     url = "https://images.unsplash.com/photo-1566438480900-0609be27a4be?q=80&w=1894&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+#     st.image(url,caption=url)
+#     image = Image.open(requests.get(url, stream=True).raw)
+#     text =  st.text_input("what color in this images")
 
-    processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
-    model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+#     processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
+#     model = ViltForQuestionAnswering.from_pretrained("dandelin/vilt-b32-finetuned-vqa")
 
-    # prepare inputs
-    encoding = processor(image, text, return_tensors="pt")
+#     # prepare inputs
+#     encoding = processor(image, text, return_tensors="pt")
 
-    # forward pass
-    outputs = model(**encoding)
-    logits = outputs.logits
-    idx = logits.argmax(-1).item()
-    print("Predicted answer:", model.config.id2label[idx])
-    st.write(f"{model.config.id2label[idx]}")
+#     # forward pass
+#     outputs = model(**encoding)
+#     logits = outputs.logits
+#     idx = logits.argmax(-1).item()
+#     print("Predicted answer:", model.config.id2label[idx])
+#     st.write(f"{model.config.id2label[idx]}")
     
 
 def get_pdf_text(pdf_docs):
@@ -78,6 +78,7 @@ def get_pdf_text(pdf_docs):
 def get_text_chunks(text):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
     chunks = text_splitter.split_text(text)
+    print(f"{chunks},---------------------")
     return chunks
 
 
@@ -110,7 +111,7 @@ def get_conversational_chain():
 def user_input(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
     
-    new_db = FAISS.load_local("faiss_index", embeddings)
+    new_db = FAISS.load_local("faiss_index", embeddings,allow_dangerous_deserialization=True)
     docs = new_db.similarity_search(user_question)
 
     chain = get_conversational_chain()
@@ -144,12 +145,14 @@ def main():
         pdf_docs = st.file_uploader("Upload your PDF Files & \n Click on the Submit & Process Button ", accept_multiple_files=True)
         if st.button("Submit & Process"):
             with st.spinner("Processing..."): # user friendly message.
-                raw_text = get_pdf_text(pdf_docs) # get the pdf text
+                raw_text = get_pdf_text(pdf_docs)
+                 # get the pdf text
                 text_chunks = get_text_chunks(raw_text) # get the text chunks
                 get_vector_store(text_chunks) # create vector store
                 st.success("Done")
         
         st.write("---")
+        # st.write(get_pdf_text(pdf_docs))
         # st.image("img/gkj.jpg")
         st.write("AI App created by @ Jeet")  # add this line to display the image
     # imag()
